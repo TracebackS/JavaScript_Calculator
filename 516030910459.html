@@ -1,0 +1,247 @@
+<body>
+	<div id="calculator">
+		<div class="LOGO">
+			<span class="name">516030910459</span>
+			<span class="verson">Shao Xinyang</span>
+		</div>
+	<div id="Input">
+		<div class="screen">
+			<input type="text" id="screenName" name="screenName" class="screen">
+		</div>
+	</div>
+	<div id="keys">
+		<input type="button" id="7" onclick="jsq(this.id)" value="7" class="buttons">
+		<input type="button" id="8" onclick="jsq(this.id)" value="8" class="buttons">
+		<input type="button" id="9" onclick="jsq(this.id)" value="9" class="buttons">
+		<input type="button" id="Back" onclick="bs()" value="Back" class="buttons">
+		<input type="button" id="C" onclick="clearNum()" value="C" class="buttons" style="margin-right:0px">
+		<input type="button" id="4" onclick="jsq(this.id)" value="4" class="buttons">
+		<input type="button" id="5" onclick="jsq(this.id)" value="5" class="buttons">
+		<input type="button" id="6" onclick="jsq(this.id)" value="6" class="buttons">
+		<input type="button" id="*" onclick="jsq(this.id)" value="*" class="buttons">
+		<input type="button" id="/" onclick="jsq(this.id)" value="/" class="buttons" style="margin-right:0px">
+		<input type="button" id="1" onclick="jsq(this.id)" value="1" class="buttons">
+		<input type="button" id="2" onclick="jsq(this.id)" value="2" class="buttons">
+		<input type="button" id="3" onclick="jsq(this.id)" value="3" class="buttons">
+		<input type="button" id="+" onclick="jsq(this.id)" value="+" class="buttons">
+		<input type="button" id="-" onclick="jsq(this.id)" value="-" class="buttons" style="margin-right:0px">
+		<input type="button" id="0" onclick="jsq(this.id)" value="0" class="buttons">
+		<input type="button" id="." onclick="jsq(this.id)" value="." class="buttons">
+		<input type="button" id="(" onclick="jsq(this.id)" value="(" class="buttons">
+		<input type="button" id=")" onclick="jsq(this.id)" value=")" class="buttons">
+		<input type="button" id="eva" onclick="eva()" value="=" class="buttons" style="margin-right:0px">
+	</div>
+</body>
+
+<style>
+*{
+	margin:0;
+	padding:0;
+	box-sizing: border-box;
+	font: 14px Arial,sans-serif;
+}
+html{
+	height:100%;
+	background-color:lightslategrey;
+}
+
+#calculator{
+	margin: 15px auto;
+	width:330px;
+	height:400px;
+	border: 1px solid lightgray;
+	background-color:darkgray;
+	padding:15px;
+}
+.LOGO{
+	height:20px;
+}
+.LOGO .name{
+	float:left;
+	line-height:30px;
+}
+.LOGO .verson{
+	float:right;
+	line-height:30px;
+}
+#Input{
+	margin-top:15px;
+}
+.screen{
+	margin-top:5px;
+	width:300px;
+	height:40px;
+	text-align: right;
+	padding-right:10px;
+	font-size:20px;
+}
+#keys{
+	border:1px solid lightgray;
+	height:223px;
+	margin-top:25px;
+	padding:8px;
+}
+#keys .last{
+	margin-right:0px;
+}
+.footer{
+	margin-top:20px;
+	height:20px;
+}
+.footer .link{
+	float:right;
+}
+#keys .buttons{
+	float:left;
+	width: 42px;
+	height: 36px;
+	text-align:center;
+	background-color:lightgray;
+	margin: 0 17px 20px 0;
+}
+</style>
+
+<script>
+	var exp = "";
+	const number = "8";
+	function jsq(input){
+		document.getElementById('screenName').value += input;
+	}
+	function clearNum(){
+		document.getElementById('screenName').value=null;
+		document.getElementById('screenName').focus();
+	}
+	function bs(){
+		var arr = document.getElementById('screenName');
+		arr.value = arr.value.substring(0, arr.value.length - 1);
+	}
+	function eva(){
+		exp = document.getElementById('screenName').value + "=";
+		try{
+			var ans = expression();
+			document.getElementById('screenName').value = ans;
+		}
+		catch (error)
+		{
+			document.getElementById('screenName').value = error.message;
+		}
+	}
+	function Token(ch, val){
+		this.kind = ch;
+		this.value = val;
+	}
+	function TokenStream(){
+		this.full = false;
+		this.buffer = 0;
+		this.putBack = function(t)
+		{
+			this.full = true;
+			this.buffer = t;
+		}
+		this.get = function()
+		{
+			if (this.full)
+			{
+				this.full = false;
+				return this.buffer;
+			}
+			var temp_expression = exp;
+			var ch = temp_expression.slice(0, 1);
+			if (exp.length > 1){
+				exp = exp.slice(1, exp.length);
+			}
+			else{
+				exp = "";
+			}
+			switch (ch)
+			{
+				case '=': case '(': case ')': case '+': case '-': case '*': case '/': {
+					return new Token(ch, 0);
+					break;
+				}
+				case '.': case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': 
+				{
+					exp = ch + exp;
+					var val = parseFloat(exp);
+					var val_length = val.toString().length;
+					exp = exp.slice(val_length, exp.length);
+					return new Token(number, val);
+					break;
+				}
+				default:
+					alert(ch);
+					throw new Error("Unexpected input");
+			}
+		}
+	}
+	var ts= new TokenStream;
+	function expression(){
+		var left = term();
+		var t = ts.get();
+		while (true){
+			switch (t.kind){
+				case '+':
+					left += term();
+					t = ts.get();
+					break;
+				case '-':
+					left -= term();
+					t = ts.get();
+					break;
+				case '=':
+					return left;
+				case ')':
+					ts.putBack(t);
+					return left;
+				default:
+					ts.putBack(t);
+					return left;
+			}
+		}
+	}
+	function term(){
+		var left = primary();
+		var t = ts.get();
+		while (true){
+			switch (t.kind)
+			{
+				case '*':
+					left *= primary();
+					t = ts.get();
+					break;
+				case '/':
+					var temp = primary();
+					if (temp === 0)
+						throw new Error("divided by zero");
+					left /= temp;
+					t = ts.get();
+					break;
+				default:
+					ts.putBack(t);
+					return left;
+			}
+		}
+	}
+	function primary(){
+		var t = ts.get();
+		switch (t.kind)
+		{
+			case '(':
+				var temp_expression = expression();
+				t = ts.get();
+				if (t.kind !== ')'){
+					ts.putBack(t);
+					throw new Error("Expected ')'");
+				}
+				return temp_expression;
+			case number:
+				return t.value;
+			case '-':
+				return -primary();
+			case '+':
+				return primary();
+			default:
+				throw new Error("Invalid token");
+		}
+	}
+</script>
